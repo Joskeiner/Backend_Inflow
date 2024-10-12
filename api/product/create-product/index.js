@@ -1,119 +1,55 @@
-import z from "zod";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { ClearBody } from "./ParserModels/Schema.js";
+import { createProduct } from "./services/dynamoDB.js";
+import { parserImages } from "./ParserModels/parserImage.js";
+import { uploadObject } from "./services/s3.js";
+import { parserText } from "./ParserModels/parserText.js";
 import "dotenv/config";
-import cryto from "crypto";
 
 export const handler = async (event) => {
-  // let responseProduct,
-  //   code = ClearBody(event.body);
+  let response;
 
-  // if (code != 200) {
-  //   return sendResponse(
-  //     400,
-  //     "ERRR: se producjo un error al procesar los datos"
-  //   );
-  // }
+  let { result, textResult } = await parserImages(event, 10000000);
+  let file = result.files[0];
 
-  let response = await createProduct(event.body);
-  // console.log(`Respueta de la funcion clearBody : ${responseProduct}`);
-  // const response = {
-  // statusCode: 200,
-  // body: {responseProduct},
-  // };
-  // // console.log("RESPUESTA de la request:  " + response);
-  // return response.body;
+  let product = parserText(textResult);
+  product.amount = Number(product.amount);
+  product.category = Number(product.category);
+  product.price = Number(product.price);
+
+  let responseValidate = ClearBody(product);
+
+  if (responseValidate) {
+    const responseS3 = await uploadObject(
+      file.filename.filename,
+      file.content,
+      file.mimetype
+    );
+
+    console.log(` VIEW FILES CONTENT: ${JSON.stringify(result)}`);
+    console.log(` VIEW PRODUCT: ${JSON.stringify(textResult)}`);
+    console.log(` VIEW PRODUCT: ${JSON.stringify(product)}`);
+    let responseProduct = await createProduct(product, responseS3);
+
+    console.log(
+      `Respuesta de la funcion create product : ${JSON.stringify(
+        responseProduct
+      )}`
+    );
+
+    return (response = {
+      statusCode: responseProduct.code,
+      body: JSON.stringify(responseProduct.msg),
+    });
+  } else {
+    response = {
+      statusCode: 400,
+      body: JSON.stringify("Hubo un error al momento de procesar su solicitud"),
+    };
+  }
+
+  response = {
+    statusCode: 200,
+    body: JSON.stringify(product),
+  };
   return response;
 };
-
-/**
- * schema for validate product
- */
-const productSchema = z.object({
-  name: z.string({
-    invalid_type_error: "el nombre del producto tiene que ser string",
-    required_error: "nombre del producto es requerido",
-  }),
-  description: z.string({
-    invalid_type_error: "la descripcion  del producto tiene que ser string",
-    required_error: "la descripcion  del producto es requerido",
-  }),
-  category: z.number().int().positive(),
-  amount: z.number().positive(),
-  image: z.string(),
-});
-
-/**
- * this function clean body and params verficate
- * @param {event.body} body
- */
-function ClearBody(body) {
-  // console.log(`BODY: dentro de la  funcion clearBody : ${body}`);
-
-  let product = JSON.parse(body);
-
-  let response = productSchema.safeParse(product);
-
-  console.log(`VALIDACION DE ESQUEMA : ${{ response }}`);
-
-  if (!response.success) {
-    console.log(`ERROR : validacion denegada ${response}`);
-    return {}, 400;
-  } else {
-    console.log(`VALIDACION CORRECTA: ${response.data.amount}`);
-    return response.data, 200;
-  }
-}
-
-// funcion para para poner los datos en dynamodb
-/**
- * @param {object} product
- */
-async function createProduct(product) {
-  /**
-   * @constant {DynamoDBClient} client
-   */
-  let data = JSON.parse(product);
-  let id = crypto.randomUUID;
-
-  console.log(`LOG DE DATA : ${data.name}`);
-  const client = new DynamoDBClient({});
-  let command = new PutItemCommand({
-    TableName: "product",
-    Item: {
-      id: {
-        S: data.id,
-      },
-      name: {
-        S: data.name,
-      },
-    },
-  });
-  /**
-   * @var {PutItemCommandOutput} response
-   */
-  let response = await client.send(command);
-  console.log(`RESPUESTA DE DYNAMO : ${response.$metadata.httpStatusCode}`);
-
-  if (response.$metadata.httpStatusCode == 201) {
-    return sendResponse(201, "Se creo con exito el producto !! ", response);
-  } else {
-    return sendResponse(response.$metadata.httpStatusCode, " ", response);
-  }
-}
-
-/**
- * this function send petition
- * @param {number} code
- * @param {string} msg
- * @param {object} [body={}]
- * @returns
- */
-function sendResponse(code, msg, body = {}) {
-  return {
-    statusCode: code,
-    body: body,
-    msg: msg,
-  };
-}
-
-// funcion para enviar una imagen al s3 y ligarlo con el cloudfront
