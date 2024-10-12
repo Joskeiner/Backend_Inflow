@@ -1,3 +1,8 @@
+/**
+ *
+ * @param {Array<object>} text
+ * @returns {object}
+ */
 export function parserText(text) {
   let product = {};
   for (let i = 0; i < text.length; i++) {
