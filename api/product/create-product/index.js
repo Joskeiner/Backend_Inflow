@@ -1,16 +1,40 @@
-import z from "zod";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { ClearBody } from "./ParserModels/Schema.js";
+import { createProduct } from "./services/dynamoDB.js";
+import { parserImages } from "./ParserModels/parserImage.js";
+import { uploadObject } from "./services/s3.js";
+import { parserText } from "./ParserModels/parserText.js";
 import "dotenv/config";
-import ID from "crypto";
 
 export const handler = async (event) => {
   let response;
-  let responseValidate = ClearBody(event.body);
+
+  let { result, textResult } = await parserImages(event, 10000000);
+  let file = result.files[0];
+
+  let product = parserText(textResult);
+  product.amount = Number(product.amount);
+  product.category = Number(product.category);
+  product.price = Number(product.price);
+
+  let responseValidate = ClearBody(product);
 
   if (responseValidate) {
-    let responseProduct = await createProduct(event.body);
+    const responseS3 = await uploadObject(
+      file.filename.filename,
+      file.content,
+      file.mimetype
+    );
 
-    console.log(`Respuesta de la funcion create product : ${responseProduct}`);
+    console.log(` VIEW FILES CONTENT: ${JSON.stringify(result)}`);
+    console.log(` VIEW PRODUCT: ${JSON.stringify(textResult)}`);
+    console.log(` VIEW PRODUCT: ${JSON.stringify(product)}`);
+    let responseProduct = await createProduct(product, responseS3);
+
+    console.log(
+      `Respuesta de la funcion create product : ${JSON.stringify(
+        responseProduct
+      )}`
+    );
 
     return (response = {
       statusCode: responseProduct.code,
@@ -23,104 +47,9 @@ export const handler = async (event) => {
     };
   }
 
+  response = {
+    statusCode: 200,
+    body: JSON.stringify(product),
+  };
   return response;
 };
-
-/**
- * schema for validate product
- */
-const productSchema = z.object({
-  name: z.string({
-    invalid_type_error: "el nombre del producto tiene que ser string",
-    required_error: "nombre del producto es requerido",
-  }),
-  description: z.string({
-    invalid_type_error: "la descripcion  del producto tiene que ser string",
-    required_error: "la descripcion  del producto es requerido",
-  }),
-  category: z.number().int().positive(),
-  amount: z.number().positive(),
-  image: z.string(),
-});
-
-/**
- * this function clean body and params verficate
- * @param {event.body} body
- */
-function ClearBody(body) {
-  // console.log(`BODY: dentro de la  funcion clearBody : ${body}`);
-
-  let product = JSON.parse(body);
-
-  let response = productSchema.safeParse(product);
-
-  console.log(`VALIDACION DE ESQUEMA : ${response.data}`);
-
-  if (!response.success) {
-    console.log(`ERROR : validacion denegada ${response.error}`);
-    return false;
-  } else {
-    console.log(`VALIDACION CORRECTA !!!!`);
-    return true;
-  }
-}
-
-// funcion para para poner los datos en dynamodb
-/**
- * @param {event.body} product
- */
-async function createProduct(product) {
-  /**
-   * @constant {DynamoDBClient} client
-   */
-  const client = new DynamoDBClient({});
-
-  let data = JSON.parse(product);
-  let id = ID.randomUUID();
-
-  data.category = String(data.category);
-
-  data.amount = String(data.amount);
-
-  console.log(`LOG DE DATA : ${{ data }}`);
-
-  let command = new PutItemCommand({
-    TableName: process.env.TABLE,
-    Item: {
-      id: {
-        S: id,
-      },
-      name: {
-        S: data.name,
-      },
-      description: {
-        S: data.description,
-      },
-      category: {
-        N: data.category,
-      },
-      amount: {
-        N: data.amount,
-      },
-    },
-  });
-  /**
-   * @var {PutItemCommandOutput} response
-   */
-  let response = await client.send(command);
-  console.log(`RESPUESTA DE DYNAMO : ${{ d: response.Attributes }}`);
-
-  if (response.$metadata.httpStatusCode == 200) {
-    return {
-      code: 201,
-      msg: "El producto se creo con exito!!!",
-    };
-  } else {
-    return {
-      code: response.$metadata.httpStatusCode,
-      msg: "ERROR : DATA BASE",
-    };
-  }
-}
-
-// funcion para enviar una imagen al s3 y ligarlo con el cloudfront
