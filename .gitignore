@@ -137,3 +137,6 @@ Makefile
 
 #bun
 bun.lockb
+
+#modulos
+node_modules
