@@ -1,0 +1,31 @@
+{
+  "name": "get-products",
+  "version": "1.0.0",
+  "description": "end-point to api products for inflow",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joskeiner/Backend_Inflow.git"
+  },
+  "keywords": [
+    "AWS",
+    "nodejs",
+    "javaScript",
+    "api",
+    "serveless"
+  ],
+  "author": "team Inflow",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Joskeiner/Backend_Inflow/issues"
+  },
+  "homepage": "https://github.com/Joskeiner/Backend_Inflow#readme",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.670.0",
+    "dotenv": "^16.4.5"
+  }
+}
