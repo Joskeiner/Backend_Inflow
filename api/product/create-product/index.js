@@ -1,8 +1,8 @@
-import { ClearBody } from "./ParserModels/Schema.js";
+import { ClearBody } from "./parser_models/Schema.js";
 import { createProduct } from "./services/dynamoDB.js";
-import { parserImages } from "./ParserModels/parserImage.js";
+import { parserImages } from "./parser_models/parserImage.js";
 import { uploadObject } from "./services/s3.js";
-import { parserText } from "./ParserModels/parserText.js";
+import { parserText } from "./parser_models/parserText.js";
 import "dotenv/config";
 
 export const handler = async (event) => {
