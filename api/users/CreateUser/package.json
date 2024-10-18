@@ -1,0 +1,31 @@
+{
+  "name": "createuser",
+  "version": "1.0.0",
+  "description": "Crear usuario",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joskeiner/Backend_Inflow.git"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "javascript",
+    "serveless",
+    "postusers"
+  ],
+  "author": "Team Inflow",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Joskeiner/Backend_Inflow/issues"
+  },
+  "homepage": "https://github.com/Joskeiner/Backend_Inflow#readme",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.675.0",
+    "@aws-sdk/lib-dynamodb": "^3.675.0"
+  }
+}
