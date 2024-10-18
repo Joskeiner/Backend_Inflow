@@ -1,0 +1,31 @@
+{
+  "name": "update-product",
+  "version": "1.0.0",
+  "description": "module for update product ",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joskeiner/Backend_Inflow.git"
+  },
+  "keywords": [
+    "aws",
+    "api",
+    "serveless",
+    "node",
+    "js"
+  ],
+  "author": "team Inflow",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Joskeiner/Backend_Inflow/issues"
+  },
+  "homepage": "https://github.com/Joskeiner/Backend_Inflow#readme",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8"
+  }
+}
