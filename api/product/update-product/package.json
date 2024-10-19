@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/Joskeiner/Backend_Inflow#readme",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.675.0",
+    "@aws-sdk/lib-dynamodb": "^3.675.0",
     "dotenv": "^16.4.5",
     "zod": "^3.23.8"
   }
