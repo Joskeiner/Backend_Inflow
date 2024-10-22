@@ -1,4 +1,5 @@
 import z from "zod";
+import Product from "./models.js";
 
 /**
  * schema for validate product update
@@ -47,3 +48,25 @@ export const updatePorductSchema = z.object({
         "el precio del producto tiene que ser numero positivo",
     }),
 });
+
+/**
+ * this function clean body and params check
+ * @param {Product} body
+ */
+export function ClearBody(body) {
+  // console.log(`BODY: dentro de la  funcion clearBody : ${body}`);
+
+  let response = updatePorductSchema.safeParse(body);
+
+  console.log(`VALIDACION DE ESQUEMA : ${JSON.stringify(response)}`);
+
+  if (!response.success) {
+    console.log(
+      `ERROR : validacion denegada ${JSON.stringify(response.error)}`
+    );
+    return false;
+  } else {
+    console.log(`VALIDACION CORRECTA !!!!`);
+    return true;
+  }
+}
